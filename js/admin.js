@@ -35,12 +35,13 @@ const ensureAdminKey = () => {
   return value || ADMIN_KEY;
 };
 
-const updateCalendarFrame = (calendarId) => {
+const updateCalendarFrame = (calendarId, options = {}) => {
   if (!calendarFrame) {
     return;
   }
+  const { refreshToken = Date.now() } = options;
   const src = new URL("https://calendar.google.com/calendar/embed");
-  src.searchParams.set("height", "1200");
+  src.searchParams.set("height", "800");
   src.searchParams.set("wkst", "1");
   src.searchParams.set("bgcolor", "#ffffff");
   src.searchParams.set("ctz", TIMEZONE);
@@ -50,6 +51,7 @@ const updateCalendarFrame = (calendarId) => {
   src.searchParams.set("showTabs", "0");
   src.searchParams.set("showCalendars", "0");
   src.searchParams.set("showTitle", "0");
+  src.searchParams.set("refresh", String(refreshToken));
   calendarFrame.src = src.toString();
 };
 
@@ -276,6 +278,10 @@ qs("#btnReloadDrivers")?.addEventListener("click", async () => {
   toast("Drivers reloaded", "ok");
 });
 qs("#btnSaveSettings")?.addEventListener("click", saveSettings);
+qs("#btnRefreshCalendar")?.addEventListener("click", () => {
+  updateCalendarFrame(state.calendarId, { refreshToken: Date.now() });
+  toast("Calendar refreshed", "ok");
+});
 qs("#btnRefreshSnapshots")?.addEventListener("click", refreshDefaultSnapshots);
 qs("#btnLoadSnapshot")?.addEventListener("click", loadSelectedSnapshot);
 calendarIdInput?.addEventListener("change", (event) => {
