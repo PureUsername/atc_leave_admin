@@ -15,6 +15,17 @@
       display: block;
       object-fit: contain;
     }
+    .calendar-embed{
+      position: relative;
+      width: 100%;
+      padding-top: 61.875%;
+    }
+    .calendar-embed iframe{
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -32,14 +43,18 @@
     <section class="bg-white rounded-2xl shadow p-5 space-y-4">
       <div class="flex items-center justify-between">
         <h2 class="font-semibold text-lg">Google Calendar</h2>
-        <span class="text-xs text-slate-500">Live calendar view</span>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-slate-500">Live calendar view</span>
+          <button id="btnRefreshCalendar" class="px-3 py-1.5 rounded bg-slate-800 text-white text-xs hover:bg-slate-900">
+            Refresh
+          </button>
+        </div>
       </div>
-      <div class="aspect-video bg-slate-100 rounded-xl overflow-hidden border">
-        <iframe id="calendarFrame" title="Google Calendar" class="w-full h-full border-0" loading="lazy"></iframe>
+      <div class="calendar-embed bg-slate-100 rounded-xl overflow-hidden border">
+        <iframe id="calendarFrame" title="Google Calendar" class="border-0" loading="lazy"></iframe>
       </div>
     </section>
 
-      <div hidden>
     <section class="bg-white rounded-2xl shadow p-5 space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
@@ -59,7 +74,6 @@
         <div class="grid md:grid-cols-2 gap-6" id="shotsGrid"></div>
       </section>
     </section>
-      </div>
 
     <section class="bg-white rounded-2xl shadow p-5 space-y-4">
       <div hidden>
