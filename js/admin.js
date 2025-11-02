@@ -20,6 +20,12 @@ const state = {
   maxPerDay: 3,
 };
 
+const CATEGORY_PRIORITY = {
+  LOWBED: 0,
+  "12WHEEL": 1,
+  TRAILER: 2,
+};
+
 const adminKeyInput = qs("#adminKey");
 const calendarIdInput = qs("#calendarId");
 const weekendDaysInput = qs("#weekendDays");
@@ -33,6 +39,35 @@ const snapshotMonthInput = qs("#snapshotMonth");
 const ensureAdminKey = () => {
   const value = adminKeyInput?.value?.trim();
   return value || ADMIN_KEY;
+};
+
+const getCategoryPriority = (category) => {
+  if (!category) {
+    return CATEGORY_PRIORITY.TRAILER;
+  }
+  const key = String(category).toUpperCase();
+  return CATEGORY_PRIORITY[key] ?? CATEGORY_PRIORITY.TRAILER;
+};
+
+const sortDrivers = (drivers = []) => {
+  drivers.sort((a, b) => {
+    const aActive = a?.active !== false;
+    const bActive = b?.active !== false;
+    if (aActive !== bActive) {
+      return aActive ? -1 : 1;
+    }
+    const categoryDiff = getCategoryPriority(a?.category) - getCategoryPriority(b?.category);
+    if (categoryDiff !== 0) {
+      return categoryDiff;
+    }
+    const nameA = (a?.display_name || "").trim();
+    const nameB = (b?.display_name || "").trim();
+    const nameCompare = nameA.localeCompare(nameB, undefined, { sensitivity: "base" });
+    if (nameCompare !== 0) {
+      return nameCompare;
+    }
+    return (a?.driver_id || "").localeCompare(b?.driver_id || "");
+  });
 };
 
 const updateCalendarFrame = (calendarId, options = {}) => {
@@ -59,6 +94,7 @@ const renderDriversTable = () => {
   if (!driversTableBody) {
     return;
   }
+  sortDrivers(state.drivers);
   driversTableBody.innerHTML = "";
   state.drivers.forEach((driver, idx) => {
     const name = driver.display_name || "";
@@ -66,15 +102,15 @@ const renderDriversTable = () => {
     const checked = driver.active ? "checked" : "";
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="border p-2"><input data-k="display_name" data-i="${idx}" class="w-full border rounded p-1" value="${name}"></td>
+      <td class="border p-2"><input data-k="display_name" data-i="${idx}" data-driver-id="${driver.driver_id || ""}" class="w-full border rounded p-1" value="${name}"></td>
       <td class="border p-2">
-        <select data-k="category" data-i="${idx}" class="w-full border rounded p-1">
+        <select data-k="category" data-i="${idx}" data-driver-id="${driver.driver_id || ""}" class="w-full border rounded p-1">
           ${["TRAILER", "12WHEEL", "LOWBED"]
             .map((option) => `<option ${category === option ? "selected" : ""} value="${option}">${option}</option>`)
             .join("")}
         </select>
       </td>
-      <td class="border p-2 text-center"><input type="checkbox" data-k="active" data-i="${idx}" ${checked}></td>
+      <td class="border p-2 text-center"><input type="checkbox" data-k="active" data-i="${idx}" data-driver-id="${driver.driver_id || ""}" ${checked}></td>
       <td class="border p-2 text-center"><button data-act="del" data-i="${idx}" class="text-red-600 text-sm">Delete</button></td>
     `;
     driversTableBody.appendChild(tr);
@@ -108,13 +144,27 @@ function persistTableEdits() {
   console.log("Current state.drivers:", JSON.stringify(state.drivers, null, 2));
 }
 
+function focusDriverNameInput(driverId) {
+  if (!driverId) {
+    return;
+  }
+  const target = qsa('#driversTable [data-k="display_name"]').find((input) => input.dataset.driverId === driverId);
+  if (target) {
+    target.focus();
+    if (typeof target.select === "function") {
+      target.select();
+    }
+  }
+}
+
 const addDriverRow = () => {
   // First persist any edits in the current table
   persistTableEdits();
   
   // Add new driver row
+  const newDriverId = `DRV-${Math.random().toString(36).slice(2, 8)}`;
   state.drivers.push({
-    driver_id: `DRV-${Math.random().toString(36).slice(2, 8)}`,
+    driver_id: newDriverId,
     display_name: "",
     category: "TRAILER",
     active: true,
@@ -124,11 +174,7 @@ const addDriverRow = () => {
   renderDriversTable();
   
   // Focus on the new row's name input for better UX
-  const newRowIndex = state.drivers.length - 1;
-  const newInput = qs(`#driversTable [data-k="display_name"][data-i="${newRowIndex}"]`);
-  if (newInput) {
-    newInput.focus();
-  }
+  focusDriverNameInput(newDriverId);
 };
 
 const saveDrivers = async () => {
