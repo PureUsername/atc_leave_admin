@@ -62,14 +62,14 @@ const renderDriversTable = () => {
   driversTableBody.innerHTML = "";
   state.drivers.forEach((driver, idx) => {
     const name = driver.display_name || "";
-    const category = driver.category || "trailer";
+    const category = driver.category || "TRAILER";
     const checked = driver.active ? "checked" : "";
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="border p-2"><input data-k="display_name" data-i="${idx}" class="w-full border rounded p-1" value="${name}"></td>
       <td class="border p-2">
         <select data-k="category" data-i="${idx}" class="w-full border rounded p-1">
-          ${["trailer", "12w", "lowbed"]
+          ${["TRAILER", "12WHEEL", "LOWBED"]
             .map((option) => `<option ${category === option ? "selected" : ""} value="${option}">${option}</option>`)
             .join("")}
         </select>
@@ -92,7 +92,7 @@ const addDriverRow = () => {
   state.drivers.push({
     driver_id: `DRV-${Math.random().toString(36).slice(2, 8)}`,
     display_name: "",
-    category: "trailer",
+    category: "TRAILER",
     active: true,
   });
   renderDriversTable();
