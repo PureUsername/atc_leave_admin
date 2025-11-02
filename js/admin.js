@@ -94,14 +94,18 @@ function persistTableEdits() {
     const index = Number(input.dataset.i);
     const key = input.dataset.k;
     if (!Number.isInteger(index) || !state.drivers[index]) {
+      console.log(`Skipping input - index: ${index}, key: ${key}, driver exists: ${!!state.drivers[index]}`);
       return;
     }
     if (input.type === "checkbox") {
       state.drivers[index][key] = input.checked;
+      console.log(`Updated driver[${index}].${key} = ${input.checked}`);
     } else {
       state.drivers[index][key] = input.value;
+      console.log(`Updated driver[${index}].${key} = "${input.value}"`);
     }
   });
+  console.log("Current state.drivers:", JSON.stringify(state.drivers, null, 2));
 }
 
 const addDriverRow = () => {
