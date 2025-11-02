@@ -20,11 +20,11 @@ const state = {
   maxPerDay: 3,
 };
 
-const CATEGORY_PRIORITY = {
-  LOWBED: 0,
-  "12WHEEL": 1,
-  TRAILER: 2,
-};
+const CATEGORY_ORDER = ["LOWBED", "12WHEEL", "TRAILER"];
+const CATEGORY_PRIORITY = CATEGORY_ORDER.reduce((acc, category, index) => {
+  acc[category] = index;
+  return acc;
+}, {});
 
 const adminKeyInput = qs("#adminKey");
 const calendarIdInput = qs("#calendarId");
@@ -43,10 +43,10 @@ const ensureAdminKey = () => {
 
 const getCategoryPriority = (category) => {
   if (!category) {
-    return CATEGORY_PRIORITY.TRAILER;
+    return CATEGORY_ORDER.length;
   }
   const key = String(category).toUpperCase();
-  return CATEGORY_PRIORITY[key] ?? CATEGORY_PRIORITY.TRAILER;
+  return CATEGORY_PRIORITY[key] ?? CATEGORY_ORDER.length;
 };
 
 const sortDrivers = (drivers = []) => {
@@ -98,14 +98,14 @@ const renderDriversTable = () => {
   driversTableBody.innerHTML = "";
   state.drivers.forEach((driver, idx) => {
     const name = driver.display_name || "";
-    const category = driver.category || "TRAILER";
+    const category = driver.category || CATEGORY_ORDER[CATEGORY_ORDER.length - 1] || "TRAILER";
     const checked = driver.active ? "checked" : "";
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="border p-2"><input data-k="display_name" data-i="${idx}" data-driver-id="${driver.driver_id || ""}" class="w-full border rounded p-1" value="${name}"></td>
       <td class="border p-2">
         <select data-k="category" data-i="${idx}" data-driver-id="${driver.driver_id || ""}" class="w-full border rounded p-1">
-          ${["TRAILER", "12WHEEL", "LOWBED"]
+          ${CATEGORY_ORDER
             .map((option) => `<option ${category === option ? "selected" : ""} value="${option}">${option}</option>`)
             .join("")}
         </select>
@@ -166,7 +166,7 @@ const addDriverRow = () => {
   state.drivers.push({
     driver_id: newDriverId,
     display_name: "",
-    category: "TRAILER",
+    category: CATEGORY_ORDER[CATEGORY_ORDER.length - 1] || "TRAILER",
     active: true,
   });
   
