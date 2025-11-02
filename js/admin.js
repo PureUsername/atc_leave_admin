@@ -81,6 +81,7 @@ const renderDriversTable = () => {
   });
   qsa('#driversTable [data-act="del"]').forEach((btn) => {
     btn.onclick = () => {
+      persistTableEdits();
       const index = Number(btn.dataset.i);
       state.drivers.splice(index, 1);
       renderDriversTable();
@@ -88,17 +89,7 @@ const renderDriversTable = () => {
   });
 };
 
-const addDriverRow = () => {
-  state.drivers.push({
-    driver_id: `DRV-${Math.random().toString(36).slice(2, 8)}`,
-    display_name: "",
-    category: "TRAILER",
-    active: true,
-  });
-  renderDriversTable();
-};
-
-const persistTableEdits = () => {
+function persistTableEdits() {
   qsa("#driversTable [data-k]").forEach((input) => {
     const index = Number(input.dataset.i);
     const key = input.dataset.k;
@@ -111,6 +102,17 @@ const persistTableEdits = () => {
       state.drivers[index][key] = input.value;
     }
   });
+}
+
+const addDriverRow = () => {
+  persistTableEdits();
+  state.drivers.push({
+    driver_id: `DRV-${Math.random().toString(36).slice(2, 8)}`,
+    display_name: "",
+    category: "TRAILER",
+    active: true,
+  });
+  renderDriversTable();
 };
 
 const saveDrivers = async () => {
