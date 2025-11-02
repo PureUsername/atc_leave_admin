@@ -55,14 +55,42 @@ const formatMonthLabel = (monthIso) => {
   return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 };
 
-const toast = (message, kind = "info") => {
+const toast = (message, kind = "info", options = {}) => {
+  const { position = "bottom-right", duration = 3000 } = options;
   const el = document.createElement("div");
-  el.className = `fixed bottom-4 right-4 px-3 py-2 rounded shadow text-white ${
+  el.className = `fixed px-3 py-2 rounded shadow text-white ${
     kind === "ok" ? "bg-emerald-600" : kind === "error" ? "bg-red-600" : "bg-slate-900"
   }`;
+  el.style.zIndex = "9999";
+
+  switch (position) {
+    case "center":
+      el.style.top = "50%";
+      el.style.left = "50%";
+      el.style.transform = "translate(-50%, -50%)";
+      break;
+    case "top-right":
+      el.style.top = "1rem";
+      el.style.right = "1rem";
+      break;
+    case "top-left":
+      el.style.top = "1rem";
+      el.style.left = "1rem";
+      break;
+    case "bottom-left":
+      el.style.bottom = "1rem";
+      el.style.left = "1rem";
+      break;
+    case "bottom-right":
+    default:
+      el.style.bottom = "1rem";
+      el.style.right = "1rem";
+      break;
+  }
+
   el.textContent = message;
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 3000);
+  setTimeout(() => el.remove(), duration);
 };
 
 const normalizeDriver = (driver) => ({
