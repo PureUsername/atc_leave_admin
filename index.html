@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Truck Driver Leave – Admin</title>
+  <title>Driver Leave System – Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <meta name="atc-api-base" content="https://autocash.my/atc/public" />
   <style>
@@ -21,10 +21,10 @@
   <div class="max-w-5xl mx-auto p-6 space-y-6">
     <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 border-b pb-4">
       <div>
-        <h1 class="text-2xl font-bold">Truck Driver Leave – Admin</h1>
+        <h1 class="text-2xl font-bold">Driver Leave System – Admin</h1>
         <p class="text-sm text-slate-500">Manage drivers, settings, and calendar previews.</p>
       </div>
-      <a href="index.html" class="inline-flex items-center px-3 py-2 text-sm rounded-lg bg-slate-800 text-white hover:bg-slate-900">
+      <a href="https://onleave.autocash.my/" class="inline-flex items-center px-3 py-2 text-sm rounded-lg bg-slate-800 text-white hover:bg-slate-900">
         Back to Driver View
       </a>
     </header>
@@ -60,6 +60,7 @@
     </section>
 
     <section class="bg-white rounded-2xl shadow p-5 space-y-4">
+      <div hidden>
       <div class="flex items-center justify-between">
         <h2 class="font-semibold text-lg">Admin Settings</h2>
         <span class="text-xs text-slate-500">Changes require the admin API key.</span>
@@ -82,6 +83,7 @@
         <button id="btnSaveSettings" class="px-3 py-2 rounded bg-slate-800 text-white">Save Settings</button>
         <button id="btnReloadDrivers" class="px-3 py-2 rounded bg-slate-200 text-slate-900">Reload Drivers</button>
       </div>
+</div>
 
       <div class="space-y-3">
         <div class="flex items-center justify-between">
