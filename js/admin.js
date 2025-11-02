@@ -105,14 +105,26 @@ function persistTableEdits() {
 }
 
 const addDriverRow = () => {
+  // First persist any edits in the current table
   persistTableEdits();
+  
+  // Add new driver row
   state.drivers.push({
     driver_id: `DRV-${Math.random().toString(36).slice(2, 8)}`,
     display_name: "",
     category: "TRAILER",
     active: true,
   });
+  
+  // Re-render the table with the new row
   renderDriversTable();
+  
+  // Focus on the new row's name input for better UX
+  const newRowIndex = state.drivers.length - 1;
+  const newInput = qs(`#driversTable [data-k="display_name"][data-i="${newRowIndex}"]`);
+  if (newInput) {
+    newInput.focus();
+  }
 };
 
 const saveDrivers = async () => {
