@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Truck Driver Leave – Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="atc-api-base" content="https://autocash.my/atc/public" />
+  <style>
+    .calendar-shot img,
+    .calendar-shot svg{
+      width: 100%;
+      height: auto;
+      max-height: 420px;
+      display: block;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+  <div class="max-w-5xl mx-auto p-6 space-y-6">
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 border-b pb-4">
+      <div>
+        <h1 class="text-2xl font-bold">Truck Driver Leave – Admin</h1>
+        <p class="text-sm text-slate-500">Manage drivers, settings, and calendar previews.</p>
+      </div>
+      <a href="index.html" class="inline-flex items-center px-3 py-2 text-sm rounded-lg bg-slate-800 text-white hover:bg-slate-900">
+        Back to Driver View
+      </a>
+    </header>
+
+    <section class="bg-white rounded-2xl shadow p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="font-semibold text-lg">Google Calendar</h2>
+        <span class="text-xs text-slate-500">Live calendar view</span>
+      </div>
+      <div class="aspect-video bg-slate-100 rounded-xl overflow-hidden border">
+        <iframe id="calendarFrame" title="Google Calendar" class="w-full h-full border-0" loading="lazy"></iframe>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-2xl shadow p-5 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h2 class="font-semibold text-lg">Calendar Snapshots</h2>
+          <p class="text-xs text-slate-500">Load SVG snapshots generated from leave data.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="text-sm flex items-center gap-2">
+            <span>Month</span>
+            <input id="snapshotMonth" type="month" class="border rounded p-2" />
+          </label>
+          <button id="btnLoadSnapshot" class="px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700">Load Selected</button>
+          <button id="btnRefreshSnapshots" class="px-3 py-2 rounded bg-slate-800 text-white text-sm hover:bg-slate-900">Current + Next</button>
+        </div>
+      </div>
+      <section id="screenshots" class="hidden">
+        <div class="grid md:grid-cols-2 gap-6" id="shotsGrid"></div>
+      </section>
+    </section>
+
+    <section class="bg-white rounded-2xl shadow p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="font-semibold text-lg">Admin Settings</h2>
+        <span class="text-xs text-slate-500">Changes require the admin API key.</span>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <label class="block">
+          <span class="text-sm">Admin API Key</span>
+          <input id="adminKey" type="password" value="a63b18e7b18d3291057cbcdb6c055d60f0d%d6fd^$99fac158b447dc88801f677" class="mt-1 w-full border rounded p-2" placeholder="Paste key for admin calls" />
+        </label>
+        <label class="block md:col-span-2">
+          <span class="text-sm">Google Calendar ID</span>
+          <input id="calendarId" class="mt-1 w-full border rounded p-2" placeholder="primary or calendar id" />
+        </label>
+        <label class="block">
+          <span class="text-sm">Weekend days (CSV of 0-6)</span>
+          <input id="weekendDays" class="mt-1 w-full border rounded p-2" placeholder="6,0" />
+        </label>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button id="btnSaveSettings" class="px-3 py-2 rounded bg-slate-800 text-white">Save Settings</button>
+        <button id="btnReloadDrivers" class="px-3 py-2 rounded bg-slate-200 text-slate-900">Reload Drivers</button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="font-semibold text-lg">Drivers</h3>
+          <div class="text-xs text-slate-500">Daily capacity: <span id="maxPerDayLabel">3</span> drivers</div>
+        </div>
+        <table class="w-full text-sm border" id="driversTable">
+          <thead>
+            <tr class="bg-slate-100">
+              <th class="p-2 border text-left">Name</th>
+              <th class="p-2 border text-left">Category</th>
+              <th class="p-2 border text-center">Active</th>
+              <th class="p-2 border text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="flex flex-wrap gap-2">
+          <button id="btnAddDriver" class="px-3 py-2 rounded bg-blue-600 text-white">Add Driver</button>
+          <button id="btnSaveDrivers" class="px-3 py-2 rounded bg-green-600 text-white">Save Driver List</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="./js/admin.js"></script>
+</body>
+</html>
