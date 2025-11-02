@@ -40,7 +40,7 @@ const updateCalendarFrame = (calendarId) => {
     return;
   }
   const src = new URL("https://calendar.google.com/calendar/embed");
-  src.searchParams.set("height", "600");
+  src.searchParams.set("height", "800");
   src.searchParams.set("wkst", "1");
   src.searchParams.set("bgcolor", "#ffffff");
   src.searchParams.set("ctz", TIMEZONE);
