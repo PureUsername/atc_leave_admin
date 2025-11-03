@@ -98,11 +98,13 @@ const renderDriversTable = () => {
   driversTableBody.innerHTML = "";
   state.drivers.forEach((driver, idx) => {
     const name = driver.display_name || "";
+    const phone = driver.phone_number || "";
     const category = driver.category || CATEGORY_ORDER[CATEGORY_ORDER.length - 1] || "TRAILER";
     const checked = driver.active ? "checked" : "";
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="border p-2"><input data-k="display_name" data-i="${idx}" data-driver-id="${driver.driver_id || ""}" class="w-full border rounded p-1" value="${name}"></td>
+      <td class="border p-2"><input data-k="phone_number" data-i="${idx}" data-driver-id="${driver.driver_id || ""}" class="w-full border rounded p-1" value="${phone}" placeholder="+60XXXXXXXXX"></td>
       <td class="border p-2">
         <select data-k="category" data-i="${idx}" data-driver-id="${driver.driver_id || ""}" class="w-full border rounded p-1">
           ${CATEGORY_ORDER
@@ -166,6 +168,7 @@ const addDriverRow = () => {
   state.drivers.push({
     driver_id: newDriverId,
     display_name: "",
+    phone_number: "",
     category: CATEGORY_ORDER[CATEGORY_ORDER.length - 1] || "TRAILER",
     active: true,
   });
@@ -182,6 +185,7 @@ const saveDrivers = async () => {
   const upserts = state.drivers.map((driver) => ({
     driver_id: driver.driver_id,
     display_name: driver.display_name,
+    phone_number: driver.phone_number,
     category: driver.category,
     active: driver.active !== false,
   }));
