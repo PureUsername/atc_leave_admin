@@ -20,7 +20,10 @@ const state = {
   maxPerDay: 3,
 };
 
-const CATEGORY_ORDER = ["LOWBED", "12WHEEL", "TRAILER"];
+const CATEGORY_ORDER = ["LOWBED", "12WHEEL", "TRAILER", "KSK"];
+const DEFAULT_CATEGORY = CATEGORY_ORDER.includes("TRAILER")
+  ? "TRAILER"
+  : CATEGORY_ORDER[CATEGORY_ORDER.length - 1] || "TRAILER";
 const CATEGORY_PRIORITY = CATEGORY_ORDER.reduce((acc, category, index) => {
   acc[category] = index;
   return acc;
@@ -99,7 +102,7 @@ const renderDriversTable = () => {
   state.drivers.forEach((driver, idx) => {
     const name = driver.display_name || "";
     const phone = driver.phone_number || "";
-    const category = driver.category || CATEGORY_ORDER[CATEGORY_ORDER.length - 1] || "TRAILER";
+    const category = driver.category || DEFAULT_CATEGORY;
     const checked = driver.active ? "checked" : "";
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -169,7 +172,7 @@ const addDriverRow = () => {
     driver_id: newDriverId,
     display_name: "",
     phone_number: "",
-    category: CATEGORY_ORDER[CATEGORY_ORDER.length - 1] || "TRAILER",
+    category: DEFAULT_CATEGORY,
     active: true,
   });
   
