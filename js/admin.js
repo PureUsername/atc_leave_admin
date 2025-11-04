@@ -5,7 +5,9 @@ import {
   addMonthsToMonthKey,
   apiGet,
   apiPost,
+  buildCalendarEmbedUrl,
   formatMonthLabel,
+  listCategoryChannelConfigs,
   monthKeyInTz,
   normalizeDriver,
   qs,
@@ -34,10 +36,11 @@ const calendarIdInput = qs("#calendarId");
 const weekendDaysInput = qs("#weekendDays");
 const driversTableBody = qs("#driversTable tbody");
 const maxPerDayLabel = qs("#maxPerDayLabel");
-const calendarFrame = qs("#calendarFrame");
+const calendarGrid = qs("#calendarGrid");
 const snapshotSection = qs("#screenshots");
 const shotsGrid = qs("#shotsGrid");
 const snapshotMonthInput = qs("#snapshotMonth");
+const calendarFrames = new Map();
 
 const ensureAdminKey = () => {
   const value = adminKeyInput?.value?.trim();
@@ -73,24 +76,91 @@ const sortDrivers = (drivers = []) => {
   });
 };
 
+const buildCalendarDisplayConfigs = (extraCalendarIds = []) => {
+  const configs = [];
+  const seen = new Set();
+  listCategoryChannelConfigs().forEach((config) => {
+    if (config?.calendarId && !seen.has(config.calendarId)) {
+      configs.push(config);
+      seen.add(config.calendarId);
+    }
+  });
+  extraCalendarIds.forEach((calendarId) => {
+    const normalized = typeof calendarId === "string" ? calendarId.trim() : "";
+    if (!normalized || seen.has(normalized)) {
+      return;
+    }
+    configs.push({
+      id: normalized,
+      label: "Configured Calendar",
+      calendarId: normalized,
+      calendarUrl: "",
+    });
+    seen.add(normalized);
+  });
+  return configs;
+};
+
+const renderCalendarEmbeds = (extraCalendarIds = []) => {
+  if (!calendarGrid) {
+    return;
+  }
+  const configs = buildCalendarDisplayConfigs(extraCalendarIds);
+  calendarFrames.clear();
+  calendarGrid.innerHTML = "";
+  const refreshToken = Date.now();
+  configs.forEach((config) => {
+    const card = document.createElement("div");
+    card.className = "space-y-3 rounded-xl border bg-slate-50 p-4";
+    const linkHtml = config.calendarUrl
+      ? `<a href="${config.calendarUrl}" target="_blank" rel="noopener" class="text-xs text-blue-600 hover:underline">Open</a>`
+      : "";
+    card.innerHTML = `
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+          <div class="font-semibold text-sm">${config.label || config.id || "Calendar"}</div>
+          <div class="text-xs text-slate-500 break-all">${config.calendarId}</div>
+        </div>
+        ${linkHtml}
+      </div>
+      <div class="calendar-embed bg-white rounded-xl overflow-hidden border">
+        <iframe class="border-0" loading="lazy" title="${config.label || config.id || "Google Calendar"}"></iframe>
+      </div>
+    `;
+    const iframe = card.querySelector("iframe");
+    if (iframe) {
+      iframe.dataset.calendarId = config.calendarId;
+      iframe.src = buildCalendarEmbedUrl(config.calendarId, { refreshToken, timeZone: TIMEZONE });
+      calendarFrames.set(config.calendarId, iframe);
+    }
+    calendarGrid.appendChild(card);
+  });
+};
+
 const updateCalendarFrame = (calendarId, options = {}) => {
-  if (!calendarFrame) {
+  if (!calendarId) {
+    return;
+  }
+  if (!calendarFrames.has(calendarId)) {
+    renderCalendarEmbeds([calendarId]);
+  }
+  const iframe = calendarFrames.get(calendarId);
+  if (!iframe) {
     return;
   }
   const { refreshToken = Date.now() } = options;
-  const src = new URL("https://calendar.google.com/calendar/embed");
-  src.searchParams.set("height", "800");
-  src.searchParams.set("wkst", "1");
-  src.searchParams.set("bgcolor", "#ffffff");
-  src.searchParams.set("ctz", TIMEZONE);
-  src.searchParams.set("src", calendarId);
-  src.searchParams.set("color", "#0B8043");
-  src.searchParams.set("mode", "MONTH");
-  src.searchParams.set("showTabs", "0");
-  src.searchParams.set("showCalendars", "0");
-  src.searchParams.set("showTitle", "0");
-  src.searchParams.set("refresh", String(refreshToken));
-  calendarFrame.src = src.toString();
+  iframe.src = buildCalendarEmbedUrl(calendarId, { refreshToken, timeZone: TIMEZONE });
+};
+
+const refreshCalendarFrames = () => {
+  if (!calendarFrames.size) {
+    renderCalendarEmbeds([state.calendarId]);
+    return;
+  }
+  const refreshToken = Date.now();
+  calendarFrames.forEach((iframe, calendarId) => {
+    iframe.src = buildCalendarEmbedUrl(calendarId, { refreshToken, timeZone: TIMEZONE });
+  });
 };
 
 const renderDriversTable = () => {
@@ -333,7 +403,7 @@ const loadInitialData = async () => {
         : String(state.weekendDays || "6,0");
     }
     renderDriversTable();
-    updateCalendarFrame(state.calendarId);
+    renderCalendarEmbeds([state.calendarId]);
   } catch (error) {
     console.error(error);
     toast(`Failed to load admin data: ${error.message}`, "error");
@@ -350,8 +420,8 @@ qs("#btnReloadDrivers")?.addEventListener("click", async () => {
 });
 qs("#btnSaveSettings")?.addEventListener("click", saveSettings);
 qs("#btnRefreshCalendar")?.addEventListener("click", () => {
-  updateCalendarFrame(state.calendarId, { refreshToken: Date.now() });
-  toast("Calendar refreshed", "ok");
+  refreshCalendarFrames();
+  toast("Calendars refreshed", "ok");
 });
 qs("#btnRefreshSnapshots")?.addEventListener("click", refreshDefaultSnapshots);
 qs("#btnLoadSnapshot")?.addEventListener("click", loadSelectedSnapshot);
@@ -368,6 +438,7 @@ calendarIdInput?.addEventListener("change", (event) => {
   if (snapshotMonthInput) {
     snapshotMonthInput.value = monthKeyInTz();
   }
+  renderCalendarEmbeds([state.calendarId]);
   await loadInitialData();
   refreshDefaultSnapshots();
 })();
