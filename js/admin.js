@@ -36,7 +36,7 @@ const calendarIdInput = qs("#calendarId");
 const weekendDaysInput = qs("#weekendDays");
 const driversTableBody = qs("#driversTable tbody");
 const maxPerDayLabel = qs("#maxPerDayLabel");
-const calendarGrid = qs("#calendarGrid");
+const calendarStack = qs("#calendarStack");
 const snapshotSection = qs("#screenshots");
 const shotsGrid = qs("#shotsGrid");
 const snapshotMonthInput = qs("#snapshotMonth");
@@ -101,39 +101,40 @@ const buildCalendarDisplayConfigs = (extraCalendarIds = []) => {
   return configs;
 };
 
+const applyCalendarSrc = (iframe, calendarId, options = {}) => {
+  if (!iframe || !calendarId) {
+    return;
+  }
+  const { refreshToken = Date.now() } = options;
+  iframe.src = buildCalendarEmbedUrl(calendarId, { refreshToken, timeZone: TIMEZONE });
+};
+
 const renderCalendarEmbeds = (extraCalendarIds = []) => {
-  if (!calendarGrid) {
+  if (!calendarStack) {
     return;
   }
   const configs = buildCalendarDisplayConfigs(extraCalendarIds);
   calendarFrames.clear();
-  calendarGrid.innerHTML = "";
-  const refreshToken = Date.now();
+  calendarStack.innerHTML = "";
   configs.forEach((config) => {
-    const card = document.createElement("div");
-    card.className = "space-y-3 rounded-xl border bg-slate-50 p-4";
-    const linkHtml = config.calendarUrl
-      ? `<a href="${config.calendarUrl}" target="_blank" rel="noopener" class="text-xs text-blue-600 hover:underline">Open</a>`
-      : "";
-    card.innerHTML = `
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div>
-          <div class="font-semibold text-sm">${config.label || config.id || "Calendar"}</div>
-          <div class="text-xs text-slate-500 break-all">${config.calendarId}</div>
-        </div>
-        ${linkHtml}
-      </div>
-      <div class="calendar-embed bg-white rounded-xl overflow-hidden border">
-        <iframe class="border-0" loading="lazy" title="${config.label || config.id || "Google Calendar"}"></iframe>
-      </div>
-    `;
-    const iframe = card.querySelector("iframe");
-    if (iframe) {
-      iframe.dataset.calendarId = config.calendarId;
-      iframe.src = buildCalendarEmbedUrl(config.calendarId, { refreshToken, timeZone: TIMEZONE });
-      calendarFrames.set(config.calendarId, iframe);
-    }
-    calendarGrid.appendChild(card);
+    const wrapper = document.createElement("div");
+    wrapper.className = "space-y-2";
+    const label = document.createElement("div");
+    label.className = "font-semibold text-sm";
+    label.textContent = config.label || config.id || "Google Calendar";
+    const embed = document.createElement("div");
+    embed.className = "calendar-embed bg-slate-100 rounded-xl overflow-hidden border";
+    const iframe = document.createElement("iframe");
+    iframe.className = "border-0";
+    iframe.loading = "lazy";
+    iframe.title = `Google Calendar – ${label.textContent}`;
+    iframe.dataset.calendarId = config.calendarId;
+    embed.appendChild(iframe);
+    wrapper.appendChild(label);
+    wrapper.appendChild(embed);
+    calendarStack.appendChild(wrapper);
+    calendarFrames.set(config.calendarId, iframe);
+    applyCalendarSrc(iframe, config.calendarId);
   });
 };
 
@@ -143,13 +144,10 @@ const updateCalendarFrame = (calendarId, options = {}) => {
   }
   if (!calendarFrames.has(calendarId)) {
     renderCalendarEmbeds([calendarId]);
-  }
-  const iframe = calendarFrames.get(calendarId);
-  if (!iframe) {
     return;
   }
-  const { refreshToken = Date.now() } = options;
-  iframe.src = buildCalendarEmbedUrl(calendarId, { refreshToken, timeZone: TIMEZONE });
+  const iframe = calendarFrames.get(calendarId);
+  applyCalendarSrc(iframe, calendarId, options);
 };
 
 const refreshCalendarFrames = () => {
@@ -159,7 +157,7 @@ const refreshCalendarFrames = () => {
   }
   const refreshToken = Date.now();
   calendarFrames.forEach((iframe, calendarId) => {
-    iframe.src = buildCalendarEmbedUrl(calendarId, { refreshToken, timeZone: TIMEZONE });
+    applyCalendarSrc(iframe, calendarId, { refreshToken });
   });
 };
 
@@ -438,7 +436,6 @@ calendarIdInput?.addEventListener("change", (event) => {
   if (snapshotMonthInput) {
     snapshotMonthInput.value = monthKeyInTz();
   }
-  renderCalendarEmbeds([state.calendarId]);
   await loadInitialData();
   refreshDefaultSnapshots();
 })();
