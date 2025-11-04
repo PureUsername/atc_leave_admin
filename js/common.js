@@ -1,7 +1,34 @@
 // Shared helpers for the leave management frontend views
 const ADMIN_KEY = "a63b18e7b18d3291057cbcdb6c055d60f0d%d6fd^$99fac158b447dc88801f677";
 const DEFAULT_API_BASE = "/atc/public";
-const DEFAULT_CALENDAR_ID = "a63b18e7b18d3291057cbcdb6c055d60f0d6d6fd399fac158b447dc88801f677@group.calendar.google.com";
+const DEFAULT_CATEGORY_CHANNEL_ID = "LOWBED";
+const CATEGORY_CHANNELS = Object.freeze({
+  LOWBED: Object.freeze({
+    id: "LOWBED",
+    label: "LOWBED",
+    chatId: "120363406616265454@g.us",
+    calendarId: "a63b18e7b18d3291057cbcdb6c055d60f0d6d6fd399fac158b447dc88801f677@group.calendar.google.com",
+    calendarUrl:
+      "https://calendar.google.com/calendar/u/0?cid=YTYzYjE4ZTdiMThkMzI5MTA1N2NiY2RiNmMwNTVkNjBmMGQ2ZDZmZDM5OWZhYzE1OGI0NDdkYzg4ODAxZjY3N0Bncm91cC5jYWxlbmRhci5nb29nbGUuY29t",
+  }),
+  "12WHEEL_TRAILER": Object.freeze({
+    id: "12WHEEL_TRAILER",
+    label: "12WHEEL + TRAILER",
+    chatId: "120363420919521153@g.us",
+    calendarId: "93d5026bdb5109634863d47d68cebaa59b60e6382d35b9b32cff2689447a4da7@group.calendar.google.com",
+    calendarUrl:
+      "https://calendar.google.com/calendar/u/0?cid=OTNkNTAyNmJkYjUxMDk2MzQ4NjNkNDdkNjhjZWJhYTU5YjYwZTYzODJkMzViOWIzMmNmZjI2ODk0NDdhNGRhN0Bncm91cC5jYWxlbmRhci5nb29nbGUuY29t",
+  }),
+  KSK: Object.freeze({
+    id: "KSK",
+    label: "KSK",
+    chatId: "120363423165515734@g.us",
+    calendarId: "006be171992ab68bc1ba7b23025d32e474b86daf6aeb5e5ebb646c029a1cf4f3@group.calendar.google.com",
+    calendarUrl:
+      "https://calendar.google.com/calendar/u/0?cid=MDA2YmUxNzE5OTJhYjY4YmMxYmE3YjIzMDI1ZDMyZTQ3NGI4NmRhZjZhZWI1ZTVlYmI2NDZjMDI5YTFjZjRmM0Bncm91cC5jYWxlbmRhci5nb29nbGUuY29t",
+  }),
+});
+const DEFAULT_CALENDAR_ID = CATEGORY_CHANNELS[DEFAULT_CATEGORY_CHANNEL_ID].calendarId;
 const TIMEZONE = "Asia/Kuala_Lumpur";
 
 const API_BASE = (() => {
@@ -117,6 +144,48 @@ const toast = (message, kind = "info", options = {}) => {
   setTimeout(() => el.remove(), duration);
 };
 
+const normalizeChannelKey = (value) => (value == null ? "" : String(value)).trim().toUpperCase();
+
+const getCategoryChannelConfig = (groupId = DEFAULT_CATEGORY_CHANNEL_ID) => {
+  const key = normalizeChannelKey(groupId) || DEFAULT_CATEGORY_CHANNEL_ID;
+  return CATEGORY_CHANNELS[key] || CATEGORY_CHANNELS[DEFAULT_CATEGORY_CHANNEL_ID];
+};
+
+const listCategoryChannelConfigs = () => Object.values(CATEGORY_CHANNELS);
+
+const buildCalendarEmbedUrl = (calendarId, options = {}) => {
+  if (!calendarId) {
+    return "";
+  }
+  const {
+    refreshToken,
+    timeZone = TIMEZONE,
+    height = 800,
+    color = "#0B8043",
+    mode = "MONTH",
+    showTabs = "0",
+    showCalendars = "0",
+    showTitle = "0",
+    background = "#ffffff",
+    weekStart = "1",
+  } = options;
+  const src = new URL("https://calendar.google.com/calendar/embed");
+  src.searchParams.set("height", String(height));
+  src.searchParams.set("wkst", weekStart);
+  src.searchParams.set("bgcolor", background);
+  src.searchParams.set("ctz", timeZone);
+  src.searchParams.set("src", calendarId);
+  src.searchParams.set("color", color);
+  src.searchParams.set("mode", mode);
+  src.searchParams.set("showTabs", showTabs);
+  src.searchParams.set("showCalendars", showCalendars);
+  src.searchParams.set("showTitle", showTitle);
+  if (refreshToken) {
+    src.searchParams.set("refresh", String(refreshToken));
+  }
+  return src.toString();
+};
+
 const normalizeDriver = (driver = {}) => {
   const rawCategory =
     driver.category ||
@@ -195,6 +264,8 @@ export {
   ADMIN_KEY,
   DEFAULT_API_BASE,
   DEFAULT_CALENDAR_ID,
+  DEFAULT_CATEGORY_CHANNEL_ID,
+  CATEGORY_CHANNELS,
   TIMEZONE,
   API_BASE,
   NORMALIZED_API_BASE,
@@ -208,6 +279,9 @@ export {
   formatMonthLabel,
   toast,
   normalizeDriver,
+  getCategoryChannelConfig,
+  listCategoryChannelConfigs,
+  buildCalendarEmbedUrl,
   resolveUrl,
   apiGet,
   apiPost,
