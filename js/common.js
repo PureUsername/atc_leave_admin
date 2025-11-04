@@ -117,14 +117,27 @@ const toast = (message, kind = "info", options = {}) => {
   setTimeout(() => el.remove(), duration);
 };
 
-const normalizeDriver = (driver) => ({
-  driver_id: driver.driver_id || driver.driverId || "",
-  display_name: driver.display_name || driver.displayName || "",
-  category: driver.category || "trailer",
-  phone_number: driver.phone_number || driver.phoneNumber || "",
-  active: driver.active !== false,
-  updated_at: driver.updated_at || driver.updatedAt || null,
-});
+const normalizeDriver = (driver = {}) => {
+  const rawCategory =
+    driver.category ||
+    driver.category_name ||
+    driver.categoryName ||
+    driver.category_code ||
+    driver.categoryCode ||
+    "";
+  const normalizedCategory =
+    typeof rawCategory === "string" && rawCategory.trim()
+      ? rawCategory.trim().toUpperCase()
+      : "TRAILER";
+  return {
+    driver_id: driver.driver_id || driver.driverId || "",
+    display_name: driver.display_name || driver.displayName || "",
+    category: normalizedCategory,
+    phone_number: driver.phone_number || driver.phoneNumber || "",
+    active: driver.active !== false,
+    updated_at: driver.updated_at || driver.updatedAt || null,
+  };
+};
 
 const resolveUrl = (endpoint) => {
   const path = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint;
