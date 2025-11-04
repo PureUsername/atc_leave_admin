@@ -42,16 +42,16 @@
 
     <section class="bg-white rounded-2xl shadow p-5 space-y-4">
       <div class="flex items-center justify-between">
-        <h2 class="font-semibold text-lg">Google Calendar</h2>
+        <h2 class="font-semibold text-lg">Google Calendars</h2>
         <div class="flex items-center gap-3">
-          <span class="text-xs text-slate-500">Live calendar view</span>
+          <span class="text-xs text-slate-500">Live calendar views</span>
           <button id="btnRefreshCalendar" class="px-3 py-1.5 rounded bg-slate-800 text-white text-xs hover:bg-slate-900">
-            Refresh
+            Refresh All
           </button>
         </div>
       </div>
-      <div class="calendar-embed bg-slate-100 rounded-xl overflow-hidden border">
-        <iframe id="calendarFrame" title="Google Calendar" class="border-0" loading="lazy"></iframe>
+      <div id="calendarGrid" class="grid gap-6 md:grid-cols-2">
+        <!-- calendar cards injected via admin.js -->
       </div>
     </section>
 
