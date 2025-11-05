@@ -122,12 +122,15 @@ const renderCalendarEmbeds = (extraCalendarIds = []) => {
     const label = document.createElement("div");
     label.className = "font-semibold text-sm";
     label.textContent = config.label || config.id || "Google Calendar";
+    if (label.textContent === "12WHEEL + TRAILER") {  
+      label.textContent = "SAND";
+    }
     const embed = document.createElement("div");
     embed.className = "calendar-embed bg-slate-100 rounded-xl overflow-hidden border";
     const iframe = document.createElement("iframe");
     iframe.className = "border-0";
     iframe.loading = "lazy";
-    iframe.title = `Google Calendar – ${label.textContent}`;
+    iframe.title = `${label.textContent}`;
     iframe.dataset.calendarId = config.calendarId;
     embed.appendChild(iframe);
     wrapper.appendChild(label);
