@@ -260,6 +260,37 @@ const apiPost = async (endpoint, body = {}) => {
   return handleResponse(res);
 };
 
+const sharedExports = {
+  ADMIN_KEY,
+  DEFAULT_API_BASE,
+  DEFAULT_CALENDAR_ID,
+  DEFAULT_CATEGORY_CHANNEL_ID,
+  CATEGORY_CHANNELS,
+  TIMEZONE,
+  API_BASE,
+  NORMALIZED_API_BASE,
+  qs,
+  qsa,
+  fmt,
+  isoToMonth,
+  addDays,
+  monthKeyInTz,
+  addMonthsToMonthKey,
+  formatMonthLabel,
+  toast,
+  normalizeDriver,
+  getCategoryChannelConfig,
+  listCategoryChannelConfigs,
+  buildCalendarEmbedUrl,
+  resolveUrl,
+  apiGet,
+  apiPost,
+};
+
+if (typeof window !== "undefined") {
+  window.ATCCommon = sharedExports;
+}
+
 export {
   ADMIN_KEY,
   DEFAULT_API_BASE,
@@ -286,3 +317,5 @@ export {
   apiGet,
   apiPost,
 };
+
+export default sharedExports;
