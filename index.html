@@ -35,9 +35,17 @@
         <h1 class="text-2xl font-bold">Driver Leave System – Admin</h1>
         <p class="text-sm text-slate-500">Manage drivers, settings, and calendar previews.</p>
       </div>
-      <a href="https://onleave.autocash.my/" class="inline-flex items-center px-3 py-2 text-sm rounded-lg bg-slate-800 text-white hover:bg-slate-900">
-        Back to Driver View
+  <div class="flex gap-2">
+      <a href="https://ll.autocash.my/" class="inline-flex items-center px-3 py-2 text-sm rounded-lg bg-slate-900 text-white hover:bg-slate-900">
+        Lowbed Page
       </a>
+      <a href="https://sl.autocash.my/" class="inline-flex items-center px-3 py-2 text-sm rounded-lg bg-slate-900 text-white hover:bg-slate-900">
+        Sand Page
+      </a>
+      <a href="https://kl.autocash.my/" class="inline-flex items-center px-3 py-2 text-sm rounded-lg bg-slate-900 text-white hover:bg-slate-900">
+        KSK Page
+      </a>
+  </div>
     </header>
 
     <section class="bg-white rounded-2xl shadow p-5 space-y-4">
@@ -45,7 +53,7 @@
         <h2 class="font-semibold text-lg">Google Calendars</h2>
         <div class="flex items-center gap-3">
           <span class="text-xs text-slate-500">Live calendar views</span>
-          <button id="btnRefreshCalendar" class="px-3 py-1.5 rounded bg-slate-800 text-white text-xs hover:bg-slate-900">
+          <button id="btnRefreshCalendar" class="px-3 py-1.5 rounded bg-slate-900 text-white text-xs hover:bg-slate-1000">
             Refresh All
           </button>
         </div>
@@ -54,28 +62,6 @@
         <!-- calendar embeds injected via admin.js -->
       </div>
     </section>
-
-      <div hidden>
-    <section class="bg-white rounded-2xl shadow p-5 space-y-4">
-      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-        <div>
-          <h2 class="font-semibold text-lg">Calendar Snapshots</h2>
-          <p class="text-xs text-slate-500">Load SVG snapshots generated from leave data.</p>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <label class="text-sm flex items-center gap-2">
-            <span>Month</span>
-            <input id="snapshotMonth" type="month" class="border rounded p-2" />
-          </label>
-          <button id="btnLoadSnapshot" class="px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700">Load Selected</button>
-          <button id="btnRefreshSnapshots" class="px-3 py-2 rounded bg-slate-800 text-white text-sm hover:bg-slate-900">Current + Next</button>
-        </div>
-      </div>
-      <section id="screenshots" class="hidden">
-        <div class="grid md:grid-cols-2 gap-6" id="shotsGrid"></div>
-      </section>
-    </section>
-      </div>
 
     <section class="bg-white rounded-2xl shadow p-5 space-y-4">
       <div hidden>
