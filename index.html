@@ -28,7 +28,52 @@
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
+<body class="bg-slate-50 text-slate-800 overflow-hidden">
+  <div
+    id="loginOverlay"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/90 px-4"
+    data-username="admin"
+    data-password="admin123"
+  >
+    <div class="w-full max-w-sm rounded-xl bg-white p-8 shadow-xl space-y-6 text-slate-800">
+      <div class="space-y-1">
+        <h2 class="text-xl font-semibold">Admin Login</h2>
+        <p class="text-sm text-slate-500">Enter your credentials to manage the calendar.</p>
+      </div>
+      <form id="loginForm" class="space-y-4">
+        <label class="block space-y-1">
+          <span class="text-sm font-medium text-slate-600">Username</span>
+          <input
+            id="loginUsername"
+            name="username"
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200"
+            placeholder="Enter username"
+            autocomplete="username"
+            required
+          />
+        </label>
+        <label class="block space-y-1">
+          <span class="text-sm font-medium text-slate-600">Password</span>
+          <input
+            id="loginPassword"
+            name="password"
+            type="password"
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200"
+            placeholder="Enter password"
+            autocomplete="current-password"
+            required
+          />
+        </label>
+        <p id="loginError" class="text-sm text-red-600 hidden">Invalid username or password.</p>
+        <button
+          type="submit"
+          class="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300"
+        >
+          Sign In
+        </button>
+      </form>
+    </div>
+  </div>
   <div class="max-w-5xl mx-auto p-6 space-y-6">
     <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 border-b pb-4">
       <div>
