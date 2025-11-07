@@ -19,7 +19,6 @@ const {
   qs,
   qsa,
   toast,
-  resolveWhatsappApiUrl,
 } = common;
 
 const state = {
@@ -521,33 +520,6 @@ const loadInitialData = async () => {
   }
 };
 
-const postWhatsappApi = async (endpoint, payload = {}) => {
-  const url = resolveWhatsappApiUrl(endpoint);
-  if (!url) {
-    throw new Error("WhatsApp bridge URL is not configured.");
-  }
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "same-origin",
-    body: JSON.stringify(payload),
-  });
-  const text = await response.text().catch(() => "");
-  let data = {};
-  if (text) {
-    try {
-      data = JSON.parse(text);
-    } catch (error) {
-      console.error("Failed to parse WhatsApp API response", error, text);
-    }
-  }
-  if (!response.ok || data.ok === false) {
-    const message = data?.message || `WhatsApp API failed (${response.status})`;
-    throw new Error(message);
-  }
-  return data;
-};
-
 const importDriversFromChannel = async (channelId) => {
   const normalized = String(channelId || "").trim().toUpperCase();
   if (!normalized) {
@@ -557,13 +529,13 @@ const importDriversFromChannel = async (channelId) => {
   const channelLabel = CATEGORY_CHANNEL_TO_DRIVER_CATEGORY[normalized] || normalized;
   try {
     toast(`Importing ${channelLabel} drivers...`, "info", { duration: 1500 });
-    const result = await postWhatsappApi("/drivers/import", {
+    const result = await apiPost("whatsapp_import_drivers", {
       admin_key: ensureAdminKey(),
       channel_id: normalized,
     });
-    const inserted = Number(result.inserted || 0);
-    const updated = Number(result.updated || 0);
-    const processed = Number(result.processed || 0);
+    const inserted = Number(result.inserted || result?.bridge?.inserted || 0);
+    const updated = Number(result.updated || result?.bridge?.updated || 0);
+    const processed = Number(result.processed || result?.bridge?.processed || 0);
     toast(
       `WhatsApp import done (${processed} processed, ${inserted} new, ${updated} refreshed).`,
       "ok",
