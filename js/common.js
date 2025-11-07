@@ -47,6 +47,24 @@ const NORMALIZED_API_BASE = (() => {
   return `${window.location.origin}${prefixed}`;
 })();
 
+const DEFAULT_WHATSAPP_API_BASE = "/whatsapp-api";
+const WHATSAPP_API_BASE = (() => {
+  const fromWindow =
+    typeof window.ATC_WHATSAPP_API_BASE === "string" ? window.ATC_WHATSAPP_API_BASE.trim() : "";
+  const fromMeta = (document.querySelector('meta[name="atc-whatsapp-api-base"]')?.content || "").trim();
+  const selected = fromWindow || fromMeta || DEFAULT_WHATSAPP_API_BASE;
+  return selected.replace(/\s+/g, "");
+})();
+const WHATSAPP_API_IS_ABSOLUTE = /^https?:\/\//i.test(WHATSAPP_API_BASE);
+const NORMALIZED_WHATSAPP_API_BASE = (() => {
+  const trimmed = WHATSAPP_API_BASE.replace(/\/+$/, "");
+  if (WHATSAPP_API_IS_ABSOLUTE) {
+    return trimmed;
+  }
+  const prefixed = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  return `${window.location.origin}${prefixed}`;
+})();
+
 const qs = (selector, parent = document) => parent.querySelector(selector);
 const qsa = (selector, parent = document) => Array.from(parent.querySelectorAll(selector));
 const _fmtFormatters = new Map();
@@ -214,6 +232,17 @@ const resolveUrl = (endpoint) => {
   return new URL(path, base);
 };
 
+const resolveWhatsappApiUrl = (endpoint = "") => {
+  const normalized = NORMALIZED_WHATSAPP_API_BASE.endsWith("/")
+    ? NORMALIZED_WHATSAPP_API_BASE.slice(0, -1)
+    : NORMALIZED_WHATSAPP_API_BASE;
+  if (!endpoint) {
+    return normalized;
+  }
+  const path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  return `${normalized}${path}`;
+};
+
 async function handleResponse(res) {
   const text = await res.text();
   let data = {};
@@ -269,6 +298,8 @@ const sharedExports = {
   TIMEZONE,
   API_BASE,
   NORMALIZED_API_BASE,
+  WHATSAPP_API_BASE,
+  NORMALIZED_WHATSAPP_API_BASE,
   qs,
   qsa,
   fmt,
@@ -283,6 +314,7 @@ const sharedExports = {
   listCategoryChannelConfigs,
   buildCalendarEmbedUrl,
   resolveUrl,
+  resolveWhatsappApiUrl,
   apiGet,
   apiPost,
 };
@@ -300,6 +332,8 @@ export {
   TIMEZONE,
   API_BASE,
   NORMALIZED_API_BASE,
+  WHATSAPP_API_BASE,
+  NORMALIZED_WHATSAPP_API_BASE,
   qs,
   qsa,
   fmt,
@@ -314,6 +348,7 @@ export {
   listCategoryChannelConfigs,
   buildCalendarEmbedUrl,
   resolveUrl,
+  resolveWhatsappApiUrl,
   apiGet,
   apiPost,
 };
