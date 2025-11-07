@@ -19,6 +19,7 @@ const {
   qs,
   qsa,
   toast,
+  resolveWhatsappApiUrl,
 } = common;
 
 const state = {
@@ -26,6 +27,7 @@ const state = {
   weekendDays: [6, 0],
   calendarId: DEFAULT_CALENDAR_ID,
   maxPerDay: 3,
+  deferSortUntilSave: false,
 };
 
 const CATEGORY_ORDER = ["LOWBED", "12WHEEL", "TRAILER", "KSK"];
@@ -36,6 +38,18 @@ const CATEGORY_PRIORITY = CATEGORY_ORDER.reduce((acc, category, index) => {
   acc[category] = index;
   return acc;
 }, {});
+
+const CATEGORY_CHANNEL_TO_DRIVER_CATEGORY = Object.freeze({
+  LOWBED: "LOWBED",
+  "12WHEEL_TRAILER": "TRAILER",
+  KSK: "KSK",
+});
+
+const IMPORT_BUTTONS = Object.freeze([
+  { id: "btnImportLowbed", channelId: "LOWBED" },
+  { id: "btnImportSand", channelId: "12WHEEL_TRAILER" },
+  { id: "btnImportKsk", channelId: "KSK" },
+]);
 
 const adminKeyInput = qs("#adminKey");
 const calendarIdInput = qs("#calendarId");
@@ -255,11 +269,14 @@ const refreshCalendarFrames = () => {
   });
 };
 
-const renderDriversTable = () => {
+const renderDriversTable = (options = {}) => {
   if (!driversTableBody) {
     return;
   }
-  sortDrivers(state.drivers);
+  const shouldSort = options.forceSort || (!state.deferSortUntilSave && !options.skipSort);
+  if (shouldSort) {
+    sortDrivers(state.drivers);
+  }
   driversTableBody.innerHTML = "";
   state.drivers.forEach((driver, idx) => {
     const name = driver.display_name || "";
@@ -337,9 +354,10 @@ const addDriverRow = () => {
     category: DEFAULT_CATEGORY,
     active: true,
   });
+  state.deferSortUntilSave = true;
   
   // Re-render the table with the new row
-  renderDriversTable();
+  renderDriversTable({ skipSort: true });
   
   // Focus on the new row's name input for better UX
   focusDriverNameInput(newDriverId);
@@ -483,6 +501,7 @@ const loadInitialData = async () => {
     state.weekendDays = data.weekend_days || data.weekendDays || [6, 0];
     state.calendarId = data.calendar_id || DEFAULT_CALENDAR_ID;
     state.maxPerDay = data.max_per_day || data.max || 3;
+    state.deferSortUntilSave = false;
     if (maxPerDayLabel) {
       maxPerDayLabel.textContent = String(state.maxPerDay);
     }
@@ -494,11 +513,66 @@ const loadInitialData = async () => {
         ? state.weekendDays.join(",")
         : String(state.weekendDays || "6,0");
     }
-    renderDriversTable();
+    renderDriversTable({ forceSort: true });
     renderCalendarEmbeds([state.calendarId]);
   } catch (error) {
     console.error(error);
     toast(`Failed to load admin data: ${error.message}`, "error");
+  }
+};
+
+const postWhatsappApi = async (endpoint, payload = {}) => {
+  const url = resolveWhatsappApiUrl(endpoint);
+  if (!url) {
+    throw new Error("WhatsApp bridge URL is not configured.");
+  }
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify(payload),
+  });
+  const text = await response.text().catch(() => "");
+  let data = {};
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch (error) {
+      console.error("Failed to parse WhatsApp API response", error, text);
+    }
+  }
+  if (!response.ok || data.ok === false) {
+    const message = data?.message || `WhatsApp API failed (${response.status})`;
+    throw new Error(message);
+  }
+  return data;
+};
+
+const importDriversFromChannel = async (channelId) => {
+  const normalized = String(channelId || "").trim().toUpperCase();
+  if (!normalized) {
+    toast("Missing channel identifier", "error");
+    return;
+  }
+  const channelLabel = CATEGORY_CHANNEL_TO_DRIVER_CATEGORY[normalized] || normalized;
+  try {
+    toast(`Importing ${channelLabel} drivers...`, "info", { duration: 1500 });
+    const result = await postWhatsappApi("/drivers/import", {
+      admin_key: ensureAdminKey(),
+      channel_id: normalized,
+    });
+    const inserted = Number(result.inserted || 0);
+    const updated = Number(result.updated || 0);
+    const processed = Number(result.processed || 0);
+    toast(
+      `WhatsApp import done (${processed} processed, ${inserted} new, ${updated} refreshed).`,
+      "ok",
+      { duration: 4000 }
+    );
+    await loadInitialData();
+  } catch (error) {
+    console.error("Driver import failed", error);
+    toast(`Import failed: ${error.message}`, "error", { duration: 5000 });
   }
 };
 
@@ -522,6 +596,13 @@ calendarIdInput?.addEventListener("change", (event) => {
   if (value) {
     state.calendarId = value;
     updateCalendarFrame(value);
+  }
+});
+
+IMPORT_BUTTONS.forEach(({ id, channelId }) => {
+  const button = qs(`#${id}`);
+  if (button) {
+    button.addEventListener("click", () => importDriversFromChannel(channelId));
   }
 });
 
