@@ -47,7 +47,7 @@ const NORMALIZED_API_BASE = (() => {
   return `${window.location.origin}${prefixed}`;
 })();
 
-const DEFAULT_WHATSAPP_API_BASE = "/whatsapp-api";
+const DEFAULT_WHATSAPP_API_BASE = "/whatsapp";
 const WHATSAPP_API_BASE = (() => {
   const fromWindow =
     typeof window.ATC_WHATSAPP_API_BASE === "string" ? window.ATC_WHATSAPP_API_BASE.trim() : "";
