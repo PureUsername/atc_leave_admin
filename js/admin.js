@@ -364,15 +364,9 @@ const saveDrivers = async () => {
     const response = await apiPost("drivers_upsert", {
       admin_key: ensureAdminKey(),
       upserts,
-      replace_existing: true,
     });
     if (response.ok) {
-      const inserted = Number(response.inserted || 0);
-      const updated = Number(response.updated || 0);
-      toast(
-        `Drivers saved (${inserted} added, ${updated} updated)`,
-        "ok"
-      );
+      toast("Drivers saved", "ok");
       await loadInitialData();
     } else {
       toast(`Save failed: ${response.message || ""}`, "error");
