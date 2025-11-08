@@ -6,6 +6,7 @@ if (!common) {
 
 const {
   ADMIN_KEY,
+  CATEGORY_CHANNELS,
   DEFAULT_CALENDAR_ID,
   TIMEZONE,
   addMonthsToMonthKey,
@@ -45,9 +46,17 @@ const CATEGORY_CHANNEL_TO_DRIVER_CATEGORY = Object.freeze({
 });
 
 const IMPORT_BUTTONS = Object.freeze([
-  { id: "btnImportLowbed", channelId: "LOWBED" },
-  { id: "btnImportSand", channelId: "12WHEEL_TRAILER" },
-  { id: "btnImportKsk", channelId: "KSK" },
+  {
+    id: "btnImportLowbed",
+    channelId: "LOWBED",
+    chatId: CATEGORY_CHANNELS?.LOWBED?.chatId || "",
+  },
+  {
+    id: "btnImportSand",
+    channelId: "12WHEEL_TRAILER",
+    chatId: CATEGORY_CHANNELS?.["12WHEEL_TRAILER"]?.chatId || "",
+  },
+  { id: "btnImportKsk", channelId: "KSK", chatId: CATEGORY_CHANNELS?.KSK?.chatId || "" },
 ]);
 
 const adminKeyInput = qs("#adminKey");
@@ -520,18 +529,21 @@ const loadInitialData = async () => {
   }
 };
 
-const importDriversFromChannel = async (channelId) => {
+const importDriversFromChannel = async ({ channelId, chatId = "" }) => {
   const normalized = String(channelId || "").trim().toUpperCase();
   if (!normalized) {
     toast("Missing channel identifier", "error");
     return;
   }
+  const fallbackConfig = CATEGORY_CHANNELS?.[normalized];
+  const resolvedChatId = chatId || fallbackConfig?.chatId || "";
   const channelLabel = CATEGORY_CHANNEL_TO_DRIVER_CATEGORY[normalized] || normalized;
   try {
     toast(`Importing ${channelLabel} drivers...`, "info", { duration: 1500 });
     const result = await apiPost("whatsapp_import_drivers", {
       admin_key: ensureAdminKey(),
       channel_id: normalized,
+      chat_id: resolvedChatId || undefined,
     });
     const inserted = Number(result.inserted || result?.bridge?.inserted || 0);
     const updated = Number(result.updated || result?.bridge?.updated || 0);
@@ -571,10 +583,10 @@ calendarIdInput?.addEventListener("change", (event) => {
   }
 });
 
-IMPORT_BUTTONS.forEach(({ id, channelId }) => {
+IMPORT_BUTTONS.forEach(({ id, channelId, chatId }) => {
   const button = qs(`#${id}`);
   if (button) {
-    button.addEventListener("click", () => importDriversFromChannel(channelId));
+    button.addEventListener("click", () => importDriversFromChannel({ channelId, chatId }));
   }
 });
 
