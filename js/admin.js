@@ -59,6 +59,17 @@ const IMPORT_BUTTONS = Object.freeze([
   { id: "btnImportKsk", channelId: "KSK", chatId: CATEGORY_CHANNELS?.KSK?.chatId || "" },
 ]);
 
+const findImportButtonConfig = (channelId) => {
+  const normalized = typeof channelId === "string" ? channelId.trim().toUpperCase() : "";
+  if (!normalized) {
+    return null;
+  }
+  return (
+    IMPORT_BUTTONS.find((config) => (config.channelId || "").trim().toUpperCase() === normalized) ||
+    null
+  );
+};
+
 const adminKeyInput = qs("#adminKey");
 const calendarIdInput = qs("#calendarId");
 const weekendDaysInput = qs("#weekendDays");
@@ -536,7 +547,12 @@ const importDriversFromChannel = async ({ channelId, chatId = "" }) => {
     return;
   }
   const fallbackConfig = CATEGORY_CHANNELS?.[normalized];
-  const resolvedChatId = chatId || fallbackConfig?.chatId || "";
+  const buttonConfig = findImportButtonConfig(normalized);
+  const resolvedChatId = chatId || buttonConfig?.chatId || fallbackConfig?.chatId || "";
+  if (!resolvedChatId) {
+    toast("Missing WhatsApp chat ID for this channel.", "error");
+    return;
+  }
   const channelLabel = CATEGORY_CHANNEL_TO_DRIVER_CATEGORY[normalized] || normalized;
   try {
     toast(`Importing ${channelLabel} drivers...`, "info", { duration: 1500 });
