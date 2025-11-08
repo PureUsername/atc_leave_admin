@@ -6,7 +6,6 @@
   <title>Driver Leave System – Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <meta name="atc-api-base" content="https://autocash.my/atc/public" />
-  <meta name="atc-whatsapp-api-base" content="/whatsapp" />
   <style>
     .calendar-shot img,
     .calendar-shot svg{
@@ -140,6 +139,17 @@
           <h3 class="font-semibold text-lg">Drivers</h3>
           <div class="text-xs text-slate-500">Daily capacity: <span id="maxPerDayLabel">3</span> drivers</div>
         </div>
+        <div class="flex flex-wrap gap-2">
+          <button id="btnImportLowbed" class="px-3 py-2 rounded bg-slate-900 text-white text-xs uppercase tracking-wide">
+            Import Lowbed Users
+          </button>
+          <button id="btnImportSand" class="px-3 py-2 rounded bg-slate-700 text-white text-xs uppercase tracking-wide">
+            Import Sand Users
+          </button>
+          <button id="btnImportKsk" class="px-3 py-2 rounded bg-slate-500 text-white text-xs uppercase tracking-wide">
+            Import KSK Users
+          </button>
+        </div>
         <table class="w-full text-sm border" id="driversTable">
           <thead>
             <tr class="bg-slate-100">
@@ -155,11 +165,6 @@
         <div class="flex flex-wrap gap-2">
           <button id="btnAddDriver" class="px-3 py-2 rounded bg-blue-600 text-white">Add Driver</button>
           <button id="btnSaveDrivers" class="px-3 py-2 rounded bg-green-600 text-white">Save Driver List</button>
-        </div>
-        <div class="flex flex-wrap gap-2 pt-2">
-          <button id="btnImportLowbed" class="px-3 py-2 rounded bg-slate-900 text-white">IMPORT LOWBED USERS</button>
-          <button id="btnImportSand" class="px-3 py-2 rounded bg-slate-700 text-white">IMPORT SAND USERS</button>
-          <button id="btnImportKsk" class="px-3 py-2 rounded bg-slate-600 text-white">IMPORT KSK USERS</button>
         </div>
       </div>
     </section>
