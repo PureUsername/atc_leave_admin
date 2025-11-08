@@ -6,7 +6,6 @@ if (!common) {
 
 const {
   ADMIN_KEY,
-  CATEGORY_CHANNELS,
   DEFAULT_CALENDAR_ID,
   TIMEZONE,
   addMonthsToMonthKey,
@@ -27,7 +26,6 @@ const state = {
   weekendDays: [6, 0],
   calendarId: DEFAULT_CALENDAR_ID,
   maxPerDay: 3,
-  deferSortUntilSave: false,
 };
 
 const CATEGORY_ORDER = ["LOWBED", "12WHEEL", "TRAILER", "KSK"];
@@ -38,37 +36,6 @@ const CATEGORY_PRIORITY = CATEGORY_ORDER.reduce((acc, category, index) => {
   acc[category] = index;
   return acc;
 }, {});
-
-const CATEGORY_CHANNEL_TO_DRIVER_CATEGORY = Object.freeze({
-  LOWBED: "LOWBED",
-  "12WHEEL_TRAILER": "TRAILER",
-  KSK: "KSK",
-});
-
-const IMPORT_BUTTONS = Object.freeze([
-  {
-    id: "btnImportLowbed",
-    channelId: "LOWBED",
-    chatId: CATEGORY_CHANNELS?.LOWBED?.chatId || "",
-  },
-  {
-    id: "btnImportSand",
-    channelId: "12WHEEL_TRAILER",
-    chatId: CATEGORY_CHANNELS?.["12WHEEL_TRAILER"]?.chatId || "",
-  },
-  { id: "btnImportKsk", channelId: "KSK", chatId: CATEGORY_CHANNELS?.KSK?.chatId || "" },
-]);
-
-const findImportButtonConfig = (channelId) => {
-  const normalized = typeof channelId === "string" ? channelId.trim().toUpperCase() : "";
-  if (!normalized) {
-    return null;
-  }
-  return (
-    IMPORT_BUTTONS.find((config) => (config.channelId || "").trim().toUpperCase() === normalized) ||
-    null
-  );
-};
 
 const adminKeyInput = qs("#adminKey");
 const calendarIdInput = qs("#calendarId");
@@ -181,6 +148,11 @@ const getCategoryPriority = (category) => {
 
 const sortDrivers = (drivers = []) => {
   drivers.sort((a, b) => {
+    const aNew = a?._isNew === true;
+    const bNew = b?._isNew === true;
+    if (aNew !== bNew) {
+      return aNew ? 1 : -1;
+    }
     const aActive = a?.active !== false;
     const bActive = b?.active !== false;
     if (aActive !== bActive) {
@@ -288,14 +260,11 @@ const refreshCalendarFrames = () => {
   });
 };
 
-const renderDriversTable = (options = {}) => {
+const renderDriversTable = () => {
   if (!driversTableBody) {
     return;
   }
-  const shouldSort = options.forceSort || (!state.deferSortUntilSave && !options.skipSort);
-  if (shouldSort) {
-    sortDrivers(state.drivers);
-  }
+  sortDrivers(state.drivers);
   driversTableBody.innerHTML = "";
   state.drivers.forEach((driver, idx) => {
     const name = driver.display_name || "";
@@ -372,11 +341,11 @@ const addDriverRow = () => {
     phone_number: "",
     category: DEFAULT_CATEGORY,
     active: true,
+    _isNew: true,
   });
-  state.deferSortUntilSave = true;
   
   // Re-render the table with the new row
-  renderDriversTable({ skipSort: true });
+  renderDriversTable();
   
   // Focus on the new row's name input for better UX
   focusDriverNameInput(newDriverId);
@@ -426,6 +395,39 @@ const saveSettings = async () => {
     }
   } catch (error) {
     toast(`Save failed: ${error.message}`, "error");
+  }
+};
+
+const importDriversFromChannel = async (channelId, label, button) => {
+  if (!channelId) {
+    return;
+  }
+  persistTableEdits();
+  if (button) {
+    button.disabled = true;
+    button.classList.add("opacity-60");
+  }
+  try {
+    const response = await apiPost("drivers_import_whatsapp", {
+      admin_key: ensureAdminKey(),
+      channel_id: channelId,
+    });
+    const inserted = Number(response.inserted || 0);
+    const updated = Number(response.updated || 0);
+    const skipped = Number(response.skipped || 0);
+    toast(
+      `${label} import complete: ${inserted} added, ${updated} updated, ${skipped} skipped`,
+      "ok",
+      { duration: 4000 }
+    );
+    await loadInitialData();
+  } catch (error) {
+    toast(`${label} import failed: ${error.message}`, "error", { duration: 5000 });
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.classList.remove("opacity-60");
+    }
   }
 };
 
@@ -520,7 +522,6 @@ const loadInitialData = async () => {
     state.weekendDays = data.weekend_days || data.weekendDays || [6, 0];
     state.calendarId = data.calendar_id || DEFAULT_CALENDAR_ID;
     state.maxPerDay = data.max_per_day || data.max || 3;
-    state.deferSortUntilSave = false;
     if (maxPerDayLabel) {
       maxPerDayLabel.textContent = String(state.maxPerDay);
     }
@@ -532,7 +533,7 @@ const loadInitialData = async () => {
         ? state.weekendDays.join(",")
         : String(state.weekendDays || "6,0");
     }
-    renderDriversTable({ forceSort: true });
+    renderDriversTable();
     renderCalendarEmbeds([state.calendarId]);
   } catch (error) {
     console.error(error);
@@ -540,43 +541,24 @@ const loadInitialData = async () => {
   }
 };
 
-const importDriversFromChannel = async ({ channelId, chatId = "" }) => {
-  const normalized = String(channelId || "").trim().toUpperCase();
-  if (!normalized) {
-    toast("Missing channel identifier", "error");
-    return;
-  }
-  const fallbackConfig = CATEGORY_CHANNELS?.[normalized];
-  const buttonConfig = findImportButtonConfig(normalized);
-  const resolvedChatId = chatId || buttonConfig?.chatId || fallbackConfig?.chatId || "";
-  if (!resolvedChatId) {
-    toast("Missing WhatsApp chat ID for this channel.", "error");
-    return;
-  }
-  const channelLabel = CATEGORY_CHANNEL_TO_DRIVER_CATEGORY[normalized] || normalized;
-  try {
-    toast(`Importing ${channelLabel} drivers...`, "info", { duration: 1500 });
-    const result = await apiPost("whatsapp_import_drivers", {
-      admin_key: ensureAdminKey(),
-      channel_id: normalized,
-      chat_id: resolvedChatId || undefined,
-    });
-    const inserted = Number(result.inserted || result?.bridge?.inserted || 0);
-    const updated = Number(result.updated || result?.bridge?.updated || 0);
-    const processed = Number(result.processed || result?.bridge?.processed || 0);
-    toast(
-      `WhatsApp import done (${processed} processed, ${inserted} new, ${updated} refreshed).`,
-      "ok",
-      { duration: 4000 }
-    );
-    await loadInitialData();
-  } catch (error) {
-    console.error("Driver import failed", error);
-    toast(`Import failed: ${error.message}`, "error", { duration: 5000 });
-  }
-};
-
 // Event bindings
+const importButtonConfigs = [
+  { selector: "#btnImportLowbed", channelId: "LOWBED", label: "Lowbed" },
+  { selector: "#btnImportSand", channelId: "12WHEEL_TRAILER", label: "Sand" },
+  { selector: "#btnImportKsk", channelId: "KSK", label: "KSK" },
+];
+
+importButtonConfigs.forEach(({ selector, channelId, label }) => {
+  const button = qs(selector);
+  if (!button) {
+    return;
+  }
+  button.addEventListener("click", async (event) => {
+    event.preventDefault();
+    await importDriversFromChannel(channelId, label, button);
+  });
+});
+
 qs("#btnAddDriver")?.addEventListener("click", addDriverRow);
 qs("#btnSaveDrivers")?.addEventListener("click", saveDrivers);
 qs("#btnReloadDrivers")?.addEventListener("click", async () => {
@@ -596,13 +578,6 @@ calendarIdInput?.addEventListener("change", (event) => {
   if (value) {
     state.calendarId = value;
     updateCalendarFrame(value);
-  }
-});
-
-IMPORT_BUTTONS.forEach(({ id, channelId, chatId }) => {
-  const button = qs(`#${id}`);
-  if (button) {
-    button.addEventListener("click", () => importDriversFromChannel({ channelId, chatId }));
   }
 });
 
